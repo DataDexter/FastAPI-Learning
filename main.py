@@ -8,7 +8,13 @@ from sqlalchemy.orm import Session
 
 Base.metadata.create_all(engine)
 
-
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+        
 app = FastAPI()
 
 fakeDataBase = {
@@ -52,7 +58,7 @@ def getItem(session: Session = Depends(get_session)):
     return items
 
 @app.post("/")
-def addItem(Item:schemas.Item, session = Depends(get_session)):
+def addItem(item:schemas.Item, session: Session = Depends(get_session)):
     item = models.Item(task = item.task)
     session.add(item)
     session.commit()
@@ -65,7 +71,7 @@ def getItem(id:int, session: Session = Depends(get_session)):
     return item
 
 @app.put("/{id}")
-def updateItem(id:int, item:schemas.Item, session = Depends(get_session)):
+def updateItem(id:int, item:schemas.Item, session:Session = Depends(get_session)):
     itemObject = session.query(models.Item).get(id)
     itemObject.task = item.task
     session.commit()
